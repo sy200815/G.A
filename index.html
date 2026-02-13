@@ -4101,12 +4101,13 @@ async function newGameSlot() {
     health: 100, stamina: 100, stress: 5, sanity: 100,
     charm: 95, sensitivity: 10, money: 50, virginity: true
   };
-  GameState.npc = {
-    luyeer: { love: 0, dark: 0, twisted: 0, broken: 0 },
-    xisalesi: { love: 0, dark: 0, twisted: 0, broken: 0 },
-    nalun: { love: 0, dark: 0, twisted: 0, broken: 0 },
-    luotina: { love: 0, dark: 0, twisted: 0, broken: 0 }
-  };
+    GameState.npc = {
+       luyeer:   { love: 0, dominance: 15, aggression: 20 },
+       xisalesi: { love: 0, voyeur: 25, forced: 5 },
+       nalun:    { love: 0, obsession: 10, control: 8 },
+       luotina:  { love: 0, intimacy: 0, trust: 0 }
+   };
+
   GameState.time = {
     day: 1,
     period: 'Morning',
