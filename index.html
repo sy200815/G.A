@@ -3781,7 +3781,16 @@ function buildSaveData() {
 function applySaveData(data) {
   if (data.pc) GameState.pc = { ...GameState.pc, ...data.pc };
   if (data.npc) GameState.npc = { ...GameState.npc, ...data.npc };
-  if (data.time) GameState.time = { ...GameState.time, ...data.time };
+  if (data.time) {
+    GameState.time = { ...GameState.time, ...data.time };
+    if (GameState.time.month === undefined) GameState.time.month = 9;
+    if (GameState.time.date === undefined) GameState.time.date = 1;
+    if (GameState.time.season === undefined) GameState.time.season = 'Autumn';
+    if (GameState.time.weather === undefined) GameState.time.weather = 'Cloudy';
+    if (GameState.time.hour === undefined) GameState.time.hour = 7;
+    if (GameState.time.minute === undefined) GameState.time.minute = 30;
+    if (GameState.time.dayOfWeek === undefined) GameState.time.dayOfWeek = 0;
+}
   if (data.clothing) GameState.clothing = data.clothing;
   if (data.inventory) GameState.inventory = data.inventory;
   if (data.skills) GameState.skills = { ...GameState.skills, ...data.skills };
@@ -4098,7 +4107,19 @@ async function newGameSlot() {
     nalun: { love: 0, dark: 0, twisted: 0, broken: 0 },
     luotina: { love: 0, dark: 0, twisted: 0, broken: 0 }
   };
-  GameState.time = { day: 1, period: 'Morning', periodIndex: 0 };
+  GameState.time = {
+    day: 1,
+    period: 'Morning',
+    periodIndex: 0,
+    hour: 7,
+    minute: 30,
+    month: 9,
+    date: 1,
+    season: 'Autumn',
+    weather: 'Cloudy',
+    dayOfWeek: 0
+};
+
   GameState.clothing = {
     top: { name: '校服衬衫', status: 'intact' },
     bottom: { name: '校服长裤', status: 'intact' },
