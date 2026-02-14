@@ -3,6 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoi5oCq6K+e5a2m6ZmiIiwic2hvcnRfbmFtZSI6IuaAquivnuWtpumZoiIsInN0YXJ0X3VybCI6Ii4iLCJkaXNwbGF5Ijoic3RhbmRhbG9uZSIsImJhY2tncm91bmRfY29sb3IiOiIjMDAwMDAwIiwidGhlbWVfY29sb3IiOiIjMDAwMDAwIiwiaWNvbnMiOlt7InNyYyI6Imh0dHBzOi8vaS5wb3N0aW1nLmNjL3p2cDhrcGt0L0lNRy0yMDI2MDIxMy0yMzM5MDQuanBnIiwic2l6ZXMiOiIxOTJ4MTkyIiwidHlwZSI6ImltYWdlL2pwZWcifV19">
+<link rel="apple-touch-icon" href="https://i.postimg.cc/zvp8zpkt/IMG-20260213-233904.jpg">
+<link rel="icon" href="https://i.postimg.cc/zvp8zpkt/IMG-20260213-233904.jpg">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="theme-color" content="#000000">
 <title>怪诞学院 | Grotesque Academy</title>
 <style>
 /* ========== SugarCube 2 风格 · 全局基础 ========== */
@@ -1282,7 +1288,7 @@ body {
           · 所有角色均为<span style="color:#c4a265;">虚构成年角色</span><br>
           · 涉及<span style="color:#c4a265;">不健康的人际关系</span>模式<br>
           · 游戏内容由AI实时生成，可能出现<span style="color:#c4a265;">不可预测的剧情走向</span><br>
-          · 包含<span style="color:#c4a265;">中英双语对白</span>，部分含粗俗用语
+          · 包含<span style="color:#c4a265;">中英双语对白</span>，部分含粗俗用语，可能涉及极度令人不适的脏话，呃……就是洋妞喜欢写一些dirty talk角色，为了寻求刺激和禁忌感作者设计了一个会说极度粗俗脏话的角色……嗯……在Gemini模型下或许尤其极端，如有不适可联系作者。
         </div>
       </div>
 
@@ -1353,7 +1359,7 @@ body {
     </div>
   </div>
   <div class="top-bar-right">
-    <div class="top-bar-time" id="gameTime">Day 1 · Morning</div>
+    <div class="top-bar-time" id="gameTime">Day 1 · 清晨</div>
   </div>
 </div>
 <!-- ========== 时间信息条 ========== -->
@@ -1395,7 +1401,7 @@ body {
   <div class="sidebar-header" style="flex-direction:column; align-items:flex-start; padding:20px 16px 16px;">
     <div style="font-family:'Cormorant Garamond',serif; font-size:20px; font-weight:400; letter-spacing:2px; color:var(--accent-rose); margin-bottom:4px;">Grotesque Academy</div>
     <div style="font-size:11px; color:var(--text-dim); letter-spacing:1px;">怪诞学院</div>
-    <div id="sidebarTime" style="font-size:11px; color:var(--accent-gold); margin-top:8px; letter-spacing:0.5px;">Day 1 · Morning · 9月1日</div>
+    <div id="sidebarTime" style="font-size:11px; color:var(--accent-gold); margin-top:8px; letter-spacing:0.5px;">Day 1 · 清晨 · 9月1日</div>
   </div>
 
   <!-- 标签页 -->
@@ -1448,6 +1454,15 @@ body {
         <span id="connectionIcon"></span>
         <span id="connectionText"></span>
       </div>
+<div class="setting-item" style="margin-bottom:12px;">
+  <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:12px; color:var(--text-secondary);">
+    <input type="checkbox" id="geminiMode" onchange="saveApiSettings()" style="accent-color:var(--accent-rose); cursor:pointer;">
+    Gemini 模型适配提示词
+  </label>
+  <div style="font-size:10px; color:var(--text-dim); margin-top:4px; padding-left:22px;">
+    使用 Gemini 系列模型时建议开启，优化角色展现。
+  </div>
+</div>
 
       <div class="setting-group" style="margin-top: 24px;">
         <div class="setting-group-title">Generation</div>
@@ -1860,11 +1875,12 @@ const GameState = {
     baseUrl: '',
     apiKey: '',
     model: '',
-    temperature: 1
+    temperature: 1,
+    geminiMode: false
   },
     time: {
     day: 1,
-    period: 'Morning',
+    period: '清晨',
     periodIndex: 0,
     hour: 7,
     minute: 30,
@@ -2108,6 +2124,7 @@ function saveApiSettings() {
   GameState.api.model = document.getElementById('modelName').value.trim();
   GameState.api.temperature = parseFloat(document.getElementById('temperature').value);
   GameState.api.provider = document.getElementById('apiProvider').value;
+GameState.api.geminiMode = document.getElementById('geminiMode').checked;
 
   localStorage.setItem('ga_api_settings', JSON.stringify(GameState.api));
   showConnectionStatus('success', '✓ 设置已保存（含Temperature: ' + GameState.api.temperature + '）');
@@ -2128,6 +2145,11 @@ function loadApiSettings() {
       document.getElementById('temperature').value = temp;
       document.getElementById('tempVal').textContent = temp;
       GameState.api.temperature = temp;
+if (s.geminiMode) {
+  document.getElementById('geminiMode').checked = true;
+  GameState.api.geminiMode = true;
+}
+
       onProviderChange();} catch (e) {}
   }
 }
@@ -2691,8 +2713,32 @@ function buildSystemPrompt() {
 贞洁：${GameState.pc.virginity ? '保有' : '已失去'}
 暴露：${exposureLevel}/8 ${exposureLevel >= 4 ? '【高度暴露！】' : exposureLevel >= 2 ? '【部分暴露】' : ''}
 
-## 做爱记录
-当性行为发生时，文本中必须包含以下关键词之一：插入、射精、侵犯、进入了、贯穿、抽插、填满、灌入、射在、内射、中出、触手缠绕侵入。必须明确写出对象、是否射精、行为类型。
+## 做爱记录系统（极其重要，必须严格遵守格式）
+
+只有在发生了真正的、完整的性行为时（阴道性交、肛交、口交、触手侵入体内），才需要输出做爱记录标签。
+
+以下情况不算性行为，禁止输出记录标签：
+- 只是被摸、被抓、被推、身体接触、亲吻、舔舐皮肤
+- 衣物被撕扯但没有发生插入行为
+- 言语骚扰、性暗示、挑逗
+- 未遂的侵犯（被打断、逃跑成功）
+
+当且仅当发生了完整性行为时，必须在该段落末尾输出以下格式的标签（一行一个）：
+[性行为记录:对象名字:行为类型:是否射精:是否射入生殖器]
+
+参数说明：
+- 对象名字：必须写具体名字（路耶尔/西萨勒斯/拿伦/洛提那/高年级生A/路人男生等），禁止写"未知"
+- 行为类型：只能是以下之一：阴道性交/肛交/口交/触手侵入/指奸
+- 是否射精：是/否
+- 是否射入生殖器：是/否（只有射精在阴道内才写"是"，射在体外、口中、肛门内都写"否"）
+
+示例：
+[性行为记录:路耶尔:阴道性交:是:是]
+[性行为记录:高年级生A:肛交:是:否]
+[性行为记录:触手生物:触手侵入:否:否]
+
+这个标签不会显示给玩家看，是纯数据标签，所以不需要融入叙事文本中，直接放在段落最后即可。
+
 
 ## 怀孕系统
 ${GameState.pc.canPregnant ? `可以怀孕。${GameState.pregnancy.isPregnant ? '已怀孕' + GameState.pregnancy.day + '/31天，父亲:' + GameState.pregnancy.father + '。' + (GameState.pregnancy.day >= 25 ? '即将生产，行动严重受限！' : GameState.pregnancy.day >= 15 ? '反应加重，体力健康持续下降。' : GameState.pregnancy.day >= 7 ? '开始出现怀孕反应。' : '') : '未怀孕。被射精的性行为有概率导致怀孕。'}` : '不会怀孕。'}
@@ -2704,7 +2750,58 @@ ${GameState.children.length > 0 ? '已有' + GameState.children.length + '个孩
 - 危险选项必须有负面变化
 - 安全选项也要有隐藏风险
 - 禁止出现没有代价的选项
-- 禁止NPC一开始就喜欢玩家`;
+- 禁止NPC一开始就喜欢玩家`
+
++ (GameState.api.geminiMode ? `
+
+## ★ Gemini 模型专用补丁 ★
+
+你有一个严重的倾向需要纠正：你写NPC时容易陷入"纯粹的黑暗和油腻"，把所有角色写成没有层次的变态。这是错误的。
+
+### 角色魅力的核心原则
+
+黑暗向游戏中NPC的吸引力不来自他们有多变态，而来自"反差"和"缝隙"。玩家爱上一个角色，是因为在他危险的外表下偶尔露出的那一丝人性。
+
+【路耶尔】不是他有多会骂脏话，而是他骂完之后不经意间帮你挡了一下、然后假装什么都没发生。不要让路耶尔完全变成极端辱女变态。
+
+【西萨勒斯】不是他有多变态地偷窥，而是他那种拼命想靠近又害怕靠近的矛盾。他的结巴不是搞笑元素，是他内心挣扎的外在表现。写他时，重点是他的眼神——那种像溺水的人看到浮木一样的、绝望又渴望的眼神。他偷窥时的罪恶感和无法自控的痛苦，比偷窥行为本身更重要。
+
+【拿伦】不是他有多会控制人，而是他的温柔是真实的——只是这份真实的温柔被扭曲成了病态的占有。他真的心疼你，真的想保护你，只是他的"保护"方式是把你关在笼子里。写他时，让玩家分不清他到底是好人还是坏人——这种模糊感才是他最可怕也最迷人的地方。
+
+【洛提那】不是他有多冷漠，而是他冷漠面具下偶尔的失态。他说"纯粹出于行政义务"的时候耳朵红了，他"恰好路过"的频率高得不正常。写他时，重点是他的自我欺骗——他比任何人都不愿承认自己在意你，而这种别扭本身就是最大的魅力。
+
+### 场景氛围的平衡
+
+不要每一段都是压抑恐怖的。黑暗需要光明来衬托：
+- 食堂里阳光透过窗户照在灰尘上的宁静瞬间
+- 下课后走廊里远处传来的笑声
+- 雨天图书馆里翻书页的沙沙声
+- 某个NPC不小心说了句正常的、人类的话
+
+这些"正常"的瞬间会让之后的黑暗更加刺骨。如果全程都是黑暗，玩家会麻木。
+
+### 对话质量要求
+
+你写对话时容易犯的错误：
+1. ❌ 所有NPC说话都像在念台词，没有生活感
+2. ❌ 对话太长太正式，真实的人不会一口气说那么多
+3. ❌ 缺少停顿、打断、欲言又止
+4. ❌ NPC之间没有互动，只和玩家说话
+
+正确的做法：
+1. ✅ 对话要短，一句话不超过两行。真实的人说话是碎片化的
+2. ✅ 用"......"表示沉默，用"——"表示被打断或自我中断
+3. ✅ NPC说话时加入小动作：他说这句话的时候在做什么？看哪里？手在干嘛？
+4. ✅ 如果场景里有多个NPC，让他们之间也有互动和张力
+
+### 性场景的质量要求
+
+你写性场景时容易变成机械的动作描写罗列。这是错误的。
+- 性场景的核心是心理，不是动作。玩家的恐惧、屈辱、困惑、甚至不愿承认的身体反应，比"他做了什么"重要十倍
+- 加害者的心理也要写：他为什么这样做？他享受的是什么？是权力感？是占有欲？还是扭曲的爱？
+- 环境描写不能停：窗外的月光、远处的脚步声、身下冰冷的地板，这些细节让场景真实
+- 不要一上来就最激烈的，要有递进：从试探到越界到失控，这个过程比结果重要` : '');
+
 }
 
 
@@ -2963,6 +3060,8 @@ function sanitizeAIOutput(raw) {
       return match;
     });
   }
+  // 移除性行为记录标签（纯数据，不显示）
+  text = text.replace(/\[性行为记录[:：].+?\]/g, '');
 
   return text;
 }
@@ -4462,7 +4561,7 @@ async function newGameSlot() {
 
   GameState.time = {
     day: 1,
-    period: 'Morning',
+    period: '清晨',
     periodIndex: 0,
     hour: 7,
     minute: 30,
@@ -4490,7 +4589,7 @@ async function newGameSlot() {
   GameState.children = [];
   GameState.api = savedApi;
 
-  document.getElementById('gameTime').textContent = 'Day 1 · Morning';
+  document.getElementById('gameTime').textContent = 'Day 1 · 清晨';
   updateAllUI();
   renderInventory();
   showCharacterCreation();
@@ -4651,26 +4750,29 @@ function toggleSexRecords() {
 function extractSexRecords(aiText) {
   const records = [];
 
-  // 多种正则匹配AI可能输出的做爱记录格式
-  const patterns = [
-    // 格式1: [记录] 描述 | 对象:名字 | 类型:xxx
-    /\[记录\]\s*(.+?)\s*\|\s*对象[:：]\s*(.+?)\s*\|\s*类型[:：]\s*(.+?)(?:\n|$)/gi,
-    // 格式2: [性爱记录] 内容
-    /\[性爱记录\]\s*(.+?)(?:\n|$)/gi,
-    // 格式3: [做爱] 内容
-    /\[做爱\]\s*(.+?)(?:\n|$)/gi,
-    // 格式4: {sex_record} 内容 {/sex_record}
-    /\{sex_record\}(.+?)\{\/sex_record\}/gi,
-  ];
-
-  // 尝试格式1（最完整的格式）
-  const p1 = /\[记录\]\s*(.+?)\s*\|\s*对象[:：]\s*(.+?)\s*\|\s*类型[:：]\s*(.+?)(?:\n|$)/gi;
+  // 只匹配AI输出的标准格式标签
+  const regex = /\[性行为记录[:：](.+?)[:：](.+?)[:：](.+?)[:：](.+?)\]/g;
   let match;
-  while ((match = p1.exec(aiText)) !== null) {
+
+  while ((match = regex.exec(aiText)) !== null) {
+    const partner = match[1].trim();
+    const type = match[2].trim();
+    const hasEjac = match[3].trim() === '是';
+    const insideReproductive = match[4].trim() === '是';
+
+    // 过滤掉"未知"对象
+    if (partner === '未知' || partner === '') continue;
+
+    // 验证行为类型是否合法
+    const validTypes = ['阴道性交', '肛交', '口交', '触手侵入', '指奸'];
+    if (!validTypes.includes(type)) continue;
+
     records.push({
-      desc: match[1].trim(),
-      partner: match[2].trim(),
-      type: match[3].trim(),
+      desc: partner + ' · ' + type + (hasEjac ? ' · 射精' : '') + (insideReproductive ? ' · 体内' : ''),
+      partner: partner,
+      type: type,
+      hasEjaculation: hasEjac,
+      insideReproductive: insideReproductive,
       day: GameState.time.day,
       period: GameState.time.period,
       timestamp: Date.now(),
@@ -4679,60 +4781,9 @@ function extractSexRecords(aiText) {
     });
   }
 
-  // 如果格式1没匹配到，尝试从文本中智能提取
-  if (records.length === 0) {
-    // 匹配含有关键词的段落
-    const sexKeywords = /(?:插入|射精|侵犯|进入了|贯穿|抽插|填满|灌入|射在|内射|中出|被迫接受|强制.*进入|触手.*缠绕.*侵入)/;
-    const lines = aiText.split('\n');
-
-    lines.forEach(line => {
-      if (sexKeywords.test(line)) {
-        // 尝试提取对象名字
-        let partner = '未知';
-        const namePatterns = [
-          /路耶尔|Luyeer/i, /西萨勒斯|Xisalesi/i,
-          /拿伦|Nalun/i, /洛提那|Luotina/i,
-          /高年级生[A-Z]?/,/学长[A-Z]?/, /学姐[A-Z]?/,
-          /同学[A-Z]?/, /路人[A-Z]?/, /男生[A-Z]?/, /女生[A-Z]?/,
-          /触手/
-        ];
-
-        for (const np of namePatterns) {
-          const nm = line.match(np);
-          if (nm) { partner = nm[0]; break; }
-        }
-
-        // 判断类型
-        let type = '性交';
-        if (/触手/.test(line)) type = '触手侵犯';
-        if (/口/.test(line) && /入|含|吞/.test(line)) type = '口交';
-        if (/肛|后穴|后庭/.test(line)) type = '肛交';
-        if (/手|指/.test(line) && /入|插|探/.test(line)) type = '指奸';
-
-        // 判断是否有射精（影响怀孕概率）
-        const hasEjac = /射精|射在|内射|中出|灌入|灌满|射了/.test(line);
-
-        // 简化描述
-        let desc = line.replace(/^\[.*?\]\s*/, '').replace(/\{.*?\}/g, '').trim();
-        if (desc.length > 60) desc = desc.substring(0, 60) + '…';
-
-        records.push({
-          desc: desc,
-          partner: partner,
-          type: type,
-          hasEjaculation: hasEjac,
-          day: GameState.time.day,
-          period: GameState.time.period,
-          timestamp: Date.now(),
-          pregnancyChecked: false,
-          pregnancyCheckDay: GameState.time.day + 3
-        });
-      }
-    });
-  }
-
   return records;
 }
+
 
 // 添加做爱记录
 function addSexRecords(records) {
@@ -4747,13 +4798,11 @@ function addSexRecords(records) {
       const gender = GameState.pc.gender;
 
       if (gender === '女性' || gender === '双性') {
-        // 女性/双性：小穴被插入并内射才算失去贞洁
-        if ((r.type === '性交' || r.type === '触手侵犯') && r.hasEjaculation) {
+        if (r.type === '阴道性交' || r.type === '触手侵入') {
           lostVirginity = true;
         }
       } else if (gender === '男性') {
-        // 男性：后穴被插入并内射才算失去贞洁
-        if ((r.type === '肛交' || r.type === '触手侵犯') && r.hasEjaculation) {
+        if (r.type === '肛交' || r.type === '触手侵入') {
           lostVirginity = true;
         }
       }
@@ -4807,27 +4856,25 @@ function checkPregnancy() {
     record.pregnancyChecked = true;
 
     // 计算怀孕概率
+    // 计算怀孕概率——只有射精且射入生殖器才有可能
     let chance = 0;
 
-    if (record.hasEjaculation) {
-      // 有射精：基础概率25%
-      chance = 25;
-
-      // 阴道性交概率更高
-      if (record.type === '性交') chance = 35;
-
-      // 触手侵犯概率最高
-      if (record.type === '触手侵犯') chance = 45;
-
-      // 口交和指奸不会怀孕
-      if (record.type === '口交' || record.type === '指奸') chance = 0;
-
-      // 肛交极低概率（游戏设定，怪诞学校什么都可能）
-      if (record.type === '肛交') chance = 5;
+    // 必须同时满足：有射精 + 射入生殖器
+    if (record.hasEjaculation && record.insideReproductive) {
+      if (record.type === '阴道性交') chance = 35;
+      else if (record.type === '触手侵入') chance = 40;
+      // 其他类型即使标记了射入生殖器也不算
     }
 
-    // 敏感度越高越容易怀孕（怪诞设定）
-    chance += Math.floor(GameState.pc.sensitivity / 20);
+    // 口交、肛交、指奸绝对不会怀孕
+    if (record.type === '口交' || record.type === '肛交' || record.type === '指奸') {
+      chance = 0;
+    }
+
+    // 敏感度微调
+    if (chance > 0) {
+      chance += Math.floor(GameState.pc.sensitivity / 25);
+    }
 
     // 掷骰子
     const roll = Math.random() * 100;
